@@ -55,8 +55,6 @@ public class Quad
                 triangles = new int[] { 3, 1, 0, 3, 2, 1 };
                 break;
         }
-
-        //uvs = new Vector2[] { uv11, uv01, uv00, uv10 };
         
         Vector2[] _uvs = new Vector2[4] { uvs[3], uvs[2], uvs[0], uvs[1] };
 
