@@ -11,9 +11,26 @@ public class Chunk : MonoBehaviour
 {
     public Material atlas;
 
-    public Vector3Int size = Vector3Int.one * 2;
+    public Vector3Int size = Vector3Int.one;
 
     public Block[,,] blocks;
+    public int[] chunkData;
+
+    private void BuildChunk() {
+        int blockCount = size.x * size.y * size.z;
+        chunkData = new int[blockCount];
+
+        for (int i = 0; i < blockCount; i++) {
+           
+            float n = UnityEngine.Random.Range(0f, 1f);
+            if (n <= 0.5f) {
+                chunkData[i] = 0;
+            }
+            else {
+                chunkData[i] = 1;
+            }
+        }
+    }
 
     private void Start() {
         MeshFilter mf = this.gameObject.AddComponent<MeshFilter>();
@@ -22,29 +39,32 @@ public class Chunk : MonoBehaviour
 
         blocks = new Block[size.x, size.y, size.z];
 
-        Mesh[] inputMeshes = new Mesh[blocks.Length];
+        BuildChunk();
+
+        List<Mesh> inputMeshes = new List<Mesh>();
         int vertexStart = 0;
         int triStart = 0;
-        int meshCount = blocks.Length;
+        int meshCount = size.x * size.y * size.z;
         int m = 0;
         var job = new ProcessMeshDataJob();
         job.vertexStart = new NativeArray<int>(meshCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
         job.triStart = new NativeArray<int>(meshCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
         
-        int i = 0;
         for (int x = 0; x < size.x; x++) {
             for (int y = 0; y < size.y; y++) {
                 for (int z = 0; z < size.z; z++) {
-                    blocks[x, y, z] = new Block(0, new Vector3(x, y, z));
-                    inputMeshes[i] = blocks[x, y, z].mesh;
-                    int vCount = inputMeshes[i].vertexCount;
-                    int iCount = (int)inputMeshes[i].GetIndexCount(0);
-                    job.vertexStart[m] = vertexStart;
-                    job.triStart[m] = triStart;
-                    vertexStart += vCount;
-                    triStart += iCount;
-                    i+=1;
-                    m+=1;
+                    blocks[x, y, z] = new Block(chunkData[ ConvertIndex(x, y, z)], new Vector3(x, y, z), this);
+                    // blocks[x, y, z] = new Block(chunkData[ConvertIndex(x, y, z)], new Vector3(x, y, z), this);
+                    if (blocks[x, y, z].mesh != null) {
+                        inputMeshes.Add(blocks[x, y, z].mesh);
+                        int vCount = blocks[x, y, z].mesh.vertexCount;
+                        int iCount = (int)blocks[x, y, z].mesh.GetIndexCount(0);
+                        job.vertexStart[m] = vertexStart;
+                        job.triStart[m] = triStart;
+                        vertexStart += vCount;
+                        triStart += iCount;
+                        m+=1;
+                    }
                 }
             }
         }
@@ -59,7 +79,7 @@ public class Chunk : MonoBehaviour
             new VertexAttributeDescriptor(VertexAttribute.TexCoord0, stream:2)
         );
 
-        var handle = job.Schedule(meshCount, 4);
+        var handle = job.Schedule(inputMeshes.Count, 4);
         var newMesh = new Mesh();
         newMesh.name = "CHUNK";
         var sm = new SubMeshDescriptor(0, triStart, MeshTopology.Triangles);
@@ -78,6 +98,29 @@ public class Chunk : MonoBehaviour
 
         mf.mesh = newMesh;
     }
+
+    public int ConvertIndex(int x, int y, int z) {
+        return z * size.x * size.y    +   y * size.x   +   x;
+    }
+
+    public bool HasSolidBlock(Vector3 pos) {
+        int index = ConvertIndex((int)pos.x, (int)pos.y, (int)pos.z);
+
+        if (pos.x < 0 || pos.x >= size.x) {
+            return false;
+        }
+
+        if (pos.y < 0 || pos.y >= size.y) {
+            return false;
+        }
+
+        if (pos.z < 0 || pos.z >= size.z) {
+            return false;
+        }
+
+        return chunkData[index] != -1;
+        // return _chunkData[(int)pos.x, (int)pos.y, (int)pos.z] != -1;
+    }                                                                                                                                               
 
     [BurstCompile]
     struct ProcessMeshDataJob : IJobParallelFor {
@@ -120,9 +163,9 @@ public class Chunk : MonoBehaviour
             if (data.indexFormat == IndexFormat.UInt16) {
                 var tris = data.GetIndexData<ushort>();
                 for (int i = 0; i < tCount; i++) {
-                int idx = tris[i];
-                outputTris[i+tStart] = vStart + idx;
-            }
+                    int idx = tris[i];
+                    outputTris[i+tStart] = vStart + idx;
+                }
                 
             }
             else {

@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class Quad
 {
-    public Mesh GenerateQuad(BLOCK_SIDE blockSide, Vector3 offset, Vector2[] uvs) {
-        Mesh mesh;
-
+    public Mesh mesh;
+    public Quad (BLOCK_SIDE blockSide, Vector3 offset, Vector2[] uvs) {
         mesh = new Mesh();
         mesh.name = "Scripted Quad";
 
@@ -60,11 +59,9 @@ public class Quad
 
         mesh.vertices = vertices;
         mesh.normals = normals;
-        mesh.SetUVs(0, _uvs);
+        mesh.uv = _uvs;
         mesh.triangles = triangles;
 
         mesh.RecalculateBounds();
-
-        return mesh;
     }
 }

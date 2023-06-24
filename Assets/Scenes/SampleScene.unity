@@ -366,6 +366,7 @@ GameObject:
   m_Component:
   - component: {fileID: 560507295}
   - component: {fileID: 560507296}
+  - component: {fileID: 560507297}
   m_Layer: 0
   m_Name: Chunk
   m_TagString: Untagged
@@ -401,7 +402,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   atlas: {fileID: 2100000, guid: aa11139805826ea46a2af167a739bba0, type: 2}
-  size: {x: 2, y: 2, z: 2}
+  size: {x: 10, y: 100, z: 10}
+  chunkData: 
+--- !u!114 &560507297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 560507293}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7653e3747cf2a274b885291c90f27ebd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  atlas: {fileID: 2100000, guid: aa11139805826ea46a2af167a739bba0, type: 2}
+  width: 10
+  height: 2
+  depth: 10
+  chunkData: 
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,8 +22,6 @@ public static class TextureAtlasHelper
                 float _y = unitSize.y * (index.y + y);
                 uvs[uvIndex] = new Vector2(_x, _y);
                 uvIndex += 1;
-
-                Debug.Log(new Vector2(_x, _y));
             }
         }
 
