@@ -16,6 +16,10 @@ public class Chunk : MonoBehaviour
     public Block[,,] blocks;
     public int[] chunkData;
 
+    private void Start() {
+        GenerateMeshAsync();
+    }
+
     private void BuildChunk() {
         int blockCount = size.x * size.y * size.z;
         chunkData = new int[blockCount];
@@ -24,7 +28,7 @@ public class Chunk : MonoBehaviour
            
             float n = UnityEngine.Random.Range(0f, 1f);
             if (n <= 0.5f) {
-                chunkData[i] = 0;
+                chunkData[i] = -1;
             }
             else {
                 chunkData[i] = 1;
@@ -32,7 +36,34 @@ public class Chunk : MonoBehaviour
         }
     }
 
-    private void Start() {
+    private void GenerateChunk() {
+        MeshFilter mf = this.gameObject.AddComponent<MeshFilter>();
+        MeshRenderer mr = this.gameObject.AddComponent<MeshRenderer>();
+        mr.material = atlas;
+
+        blocks = new Block[size.x, size.y, size.z];
+
+        BuildChunk();
+
+        List<Mesh> meshes = new List<Mesh>();
+
+        for (int x = 0; x < size.x; x++) {
+            for (int y = 0; y < size.y; y++) {
+                for (int z = 0; z < size.z; z++) {
+                    blocks[x, y, z] = new Block(chunkData[ ConvertIndex(x, y, z)], new Vector3(x, y, z), this);
+                    if (blocks[x, y, z].mesh != null) {
+                        meshes.Add(blocks[x, y, z].mesh);
+                    }
+                }
+            }
+        }
+
+        Mesh mergedMeshes = MeshUtils.MergeMeshes(meshes.ToArray());
+
+        mf.mesh = mergedMeshes;
+    }
+
+    private void GenerateMeshAsync() {
         MeshFilter mf = this.gameObject.AddComponent<MeshFilter>();
         MeshRenderer mr = this.gameObject.AddComponent<MeshRenderer>();
         mr.material = atlas;
@@ -54,7 +85,6 @@ public class Chunk : MonoBehaviour
             for (int y = 0; y < size.y; y++) {
                 for (int z = 0; z < size.z; z++) {
                     blocks[x, y, z] = new Block(chunkData[ ConvertIndex(x, y, z)], new Vector3(x, y, z), this);
-                    // blocks[x, y, z] = new Block(chunkData[ConvertIndex(x, y, z)], new Vector3(x, y, z), this);
                     if (blocks[x, y, z].mesh != null) {
                         inputMeshes.Add(blocks[x, y, z].mesh);
                         int vCount = blocks[x, y, z].mesh.vertexCount;
@@ -100,7 +130,7 @@ public class Chunk : MonoBehaviour
     }
 
     public int ConvertIndex(int x, int y, int z) {
-        return z * size.x * size.y    +   y * size.x   +   x;
+        return z * size.x * size.y + y * size.x + x;
     }
 
     public bool HasSolidBlock(Vector3 pos) {
